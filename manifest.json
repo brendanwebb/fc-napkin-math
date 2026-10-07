@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "FC Napkin Math",
+  "version": "1.0",
+  "description": "Calculates remaining gems needed for Streamlined SBCs",
+  "content_scripts": [
+    {
+      "matches": ["https://www.ea.com/ea-sports-fc/ultimate-team/web-app/*"],
+      "js": ["content.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "128": "icon.png"
+  },
+  "permissions": []
+}
