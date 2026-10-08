@@ -9,25 +9,12 @@
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   user-select: none;
-  -webkit-user-select: none;
   transition: border-color 0.5s, box-shadow 0.5s;
-}
-
-/* Allow selection on value elements */
-#gems-tracker .val,
-#gems-tracker .tracker-remaining {
-  user-select: text;
-  -webkit-user-select: text;
 }
 
 #gems-tracker.fulfilled {
   border-color: #00e676;
   box-shadow: 0 0 24px rgba(0, 230, 118, 0.4);
-}
-
-#gems-tracker.fulfilled .tracker-remaining {
-  color: #00e676;
-  font-size: 30px;
 }
 
 /* Too many gems - yellow warning */
@@ -97,10 +84,6 @@
 #gems-tracker.fulfilled .tracker-remaining {
   color: #00e676;
   font-size: 30px;
-}
-
-#gems-tracker.fulfilled .tracker-remaining .perfect-text {
-  color: #00e676;
 }
 
 #gems-tracker .tracker-remaining.over {
