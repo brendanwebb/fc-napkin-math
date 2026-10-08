@@ -67,11 +67,25 @@
   function doUpdate() {
     pendingUpdate = false;
     
-    // Force refresh the score element lookup with each update
+    // Ensure we can find ANY score element in the page
+    const allScoreElements = document.querySelectorAll(SCORE_SELECTOR);
+    
+    // Debug output
+    console.log('DEBUG: Found', allScoreElements.length, 'score elements');
+    if (allScoreElements.length > 0) {
+      let foundText = '';
+      allScoreElements.forEach(el => {
+        foundText += el.textContent.trim() + '; ';
+      });
+      console.log('DEBUG: Score text values:', foundText);
+    }
+    
+    // Use the first one if available
     const scoreEl = document.querySelector(SCORE_SELECTOR);
 
     // If no score element found at all, hide tracker
     if (!scoreEl) {
+      console.log('DEBUG: No score element found');
       if (trackerInserted) {
         const tracker = document.getElementById('gems-tracker');
         if (tracker) tracker.style.display = 'none';
@@ -79,6 +93,8 @@
       lastScoreText = '';
       return;
     }
+
+    console.log('DEBUG: Found score element with text:', scoreEl.textContent.trim());
 
     // Always show the tracker when score element exists
     const tracker = ensureTracker();
@@ -98,9 +114,12 @@
 
     const score = parseScore(text);
     if (!score) {
+      console.log('DEBUG: Failed to parse score:', text);
       // Even if parsing fails, keep tracker visible with previous values or display error
       return;
     }
+
+    console.log('DEBUG: Successfully parsed score - current:', score.current, 'required:', score.required);
 
     const diff = score.current - score.required;
     const filled = diff === 0;
@@ -153,11 +172,6 @@
     ensureObserver();
   }, 100);
 
-  // Additional updates to avoid race conditions
-  setTimeout(() => {
-    doUpdate();
-  }, 500);
-  
   // Light polling as fallback (every 6s)
   setInterval(doUpdate, 6000);
 })();
