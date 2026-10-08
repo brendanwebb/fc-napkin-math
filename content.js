@@ -15,77 +15,14 @@
     return { current, required };
   }
 
-  function getIconFromScore() {
-    const scoreEl = document.querySelector(SCORE_SELECTOR);
-    if (!scoreEl) return null;
-    const iconEl = scoreEl.querySelector('.ut-one-click-sbc-header-view--score-icon');
-    return iconEl ? iconEl.cloneNode(true) : null;
-  }
-
-  function ensureTracker(scoreEl) {
-    let el = document.getElementById('gems-tracker');
-    if (!el) {
-      const icon = getIconFromScore();
-      const iconHTML = icon ? icon.outerHTML : '';
-      el = document.createElement('div');
-      el.id = 'gems-tracker';
-      el.innerHTML = [
-        '<div class="tracker-title"><img src="https://www.ea.com/ea-sports-fc/ultimate-team/web-app/images/sbc/dustpoint.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> FC Napkin Math</div>',
-        '<div class="tracker-bar-track"><div class="tracker-bar-fill"></div></div>',
-        '<div class="tracker-row"><span>Collected</span><span class="val" id="gt-current"></span></div>',
-        '<div class="tracker-row"><span>Required</span><span class="val" id="gt-required"></span></div>',
-        '<div class="tracker-remaining" id="gt-remaining"></div>',
-      ].join('');
-      document.body.appendChild(el);
-      trackerInserted = true;
-    }
-    return el;
-  }
-
-  function placeTracker() {
-    if (!trackerInserted) return;
-    const tracker = document.getElementById('gems-tracker');
-    if (!tracker) {
-      trackerInserted = false;
-      return;
-    }
-
-    // Insert the tracker right after the ".rewards-container" (Group Rewards section)
-    const rewardsContainer = document.querySelector('.rewards-container');
-    if (!rewardsContainer) return;
-
-    if (tracker.parentNode !== rewardsContainer.parentNode || tracker.nextElementSibling !== rewardsContainer.nextSibling) {
-      const next = rewardsContainer.nextSibling;
-      if (next) {
-        rewardsContainer.parentNode.insertBefore(tracker, next);
-      } else {
-        rewardsContainer.parentNode.appendChild(tracker);
-      }
-    }
-  }
-
   function doUpdate() {
     pendingUpdate = false;
     
-    // Ensure we can find ANY score element in the page
-    const allScoreElements = document.querySelectorAll(SCORE_SELECTOR);
-    
-    // Debug output
-    console.log('DEBUG: Found', allScoreElements.length, 'score elements');
-    if (allScoreElements.length > 0) {
-      let foundText = '';
-      allScoreElements.forEach(el => {
-        foundText += el.textContent.trim() + '; ';
-      });
-      console.log('DEBUG: Score text values:', foundText);
-    }
-    
-    // Use the first one if available
+    // Find score element
     const scoreEl = document.querySelector(SCORE_SELECTOR);
 
     // If no score element found at all, hide tracker
     if (!scoreEl) {
-      console.log('DEBUG: No score element found');
       if (trackerInserted) {
         const tracker = document.getElementById('gems-tracker');
         if (tracker) tracker.style.display = 'none';
@@ -94,14 +31,39 @@
       return;
     }
 
-    console.log('DEBUG: Found score element with text:', scoreEl.textContent.trim());
+    // Create or ensure tracker exists
+    let tracker = document.getElementById('gems-tracker');
+    if (!tracker) {
+      tracker = document.createElement('div');
+      tracker.id = 'gems-tracker';
+      tracker.innerHTML = [
+        '<div class="tracker-title"><img src="https://www.ea.com/ea-sports-fc/ultimate-team/web-app/images/sbc/dustpoint.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> FC Napkin Math</div>',
+        '<div class="tracker-bar-track"><div class="tracker-bar-fill"></div></div>',
+        '<div class="tracker-row"><span>Collected</span><span class="val" id="gt-current"></span></div>',
+        '<div class="tracker-row"><span>Required</span><span class="val" id="gt-required"></span></div>',
+        '<div class="tracker-remaining" id="gt-remaining"></div>',
+      ].join('');
+      
+      // Add to body if not already there
+      if (!document.body.contains(tracker)) {
+        document.body.appendChild(tracker);
+      }
+      trackerInserted = true;
+    }
 
-    // Always show the tracker when score element exists
-    const tracker = ensureTracker();
-    if (tracker) tracker.style.display = 'block';
+    // Show tracker and place it correctly  
+    tracker.style.display = 'block';
     
-    // Make sure tracker is placed below the trigger section
-    placeTracker();
+    // Insert the tracker right after the ".rewards-container" (Group Rewards section)
+    const rewardsContainer = document.querySelector('.rewards-container');
+    if (rewardsContainer && tracker.parentNode !== rewardsContainer.parentNode) {
+      const next = rewardsContainer.nextSibling;
+      if (next) {
+        rewardsContainer.parentNode.insertBefore(tracker, next);
+      } else {
+        rewardsContainer.parentNode.appendChild(tracker);
+      }
+    }
 
     const text = scoreEl.textContent.trim();
     
@@ -114,12 +76,8 @@
 
     const score = parseScore(text);
     if (!score) {
-      console.log('DEBUG: Failed to parse score:', text);
-      // Even if parsing fails, keep tracker visible with previous values or display error
       return;
     }
-
-    console.log('DEBUG: Successfully parsed score - current:', score.current, 'required:', score.required);
 
     const diff = score.current - score.required;
     const filled = diff === 0;
@@ -128,25 +86,31 @@
     // Progress bar: clamp at 100% regardless
     const pct = score.required > 0 ? Math.min((score.current / score.required) * 100, 100) : 100;
     const fill = tracker.querySelector('.tracker-bar-fill');
-    fill.style.width = pct + '%';
-    fill.classList.toggle('fulfilled', filled);
-    fill.classList.toggle('over', overrun);
-    tracker.classList.toggle('fulfilled', filled);
-    tracker.classList.toggle('over', overrun);
-
-    tracker.querySelector('#gt-current').textContent = score.current.toLocaleString();
-    tracker.querySelector('#gt-required').textContent = score.required.toLocaleString();
-
-    const remEl = tracker.querySelector('#gt-remaining');
-    if (overrun) {
-      remEl.innerHTML = diff.toLocaleString() + ' <span class="gems-word">gems too many</span>';
-      remEl.classList.add('over');
-    } else {
-      remEl.classList.remove('over');
-      if (filled) {
-        remEl.textContent = 'Perfect';
+    if (fill) {
+      fill.style.width = pct + '%';
+      fill.classList.toggle('fulfilled', filled);
+      fill.classList.toggle('over', overrun);
+    }
+    
+    // Update all values
+    const currentEl = tracker.querySelector('#gt-current');
+    const requiredEl = tracker.querySelector('#gt-required');
+    const remainingEl = tracker.querySelector('#gt-remaining');
+    
+    if (currentEl) currentEl.textContent = score.current.toLocaleString();
+    if (requiredEl) requiredEl.textContent = score.required.toLocaleString();
+    
+    if (remainingEl) {
+      remainingEl.classList.remove('over');
+      if (overrun) {
+        remainingEl.innerHTML = diff.toLocaleString() + ' <span class="gems-word">gems too many</span>';
+        remainingEl.classList.add('over');
       } else {
-        remEl.innerHTML = Math.abs(diff).toLocaleString() + ' <span class="gems-word">gems left</span>';
+        if (filled) {
+          remainingEl.textContent = 'Perfect';
+        } else {
+          remainingEl.innerHTML = Math.abs(diff).toLocaleString() + ' <span class="gems-word">gems left</span>';
+        }
       }
     }
   }
@@ -161,12 +125,12 @@
   function ensureObserver() {
     if (observerInstalled) return;
     const obs = new MutationObserver(scheduleUpdate);
-    // Watch the entire document body - most reliable for detecting SBC content
+    // Watch the entire document body
     obs.observe(document.body, { childList: true, subtree: true });
     observerInstalled = true;
   }
 
-  // Start with a single check after a short delay (let first paint settle)
+  // Start with a single check after a short delay 
   setTimeout(() => {
     doUpdate();
     ensureObserver();
