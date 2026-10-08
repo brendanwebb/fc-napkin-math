@@ -140,9 +140,8 @@
   function ensureObserver() {
     if (observerInstalled) return;
     const obs = new MutationObserver(scheduleUpdate);
-    // Watch for SBC-related elements and any score-value elements that may exist
-    // This covers both builder and review screen structures more reliably
-    const target = document.querySelector('[class*="sbc"]') || document.body;
+    // Watch for elements that contain score values, not just specific class names
+    const target = document.body; 
     obs.observe(target, { childList: true, subtree: true });
     observerInstalled = true;
   }
