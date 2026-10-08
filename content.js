@@ -140,11 +140,9 @@
   function ensureObserver() {
     if (observerInstalled) return;
     const obs = new MutationObserver(scheduleUpdate);
-    // Watch childList only for the SBC header area, not the entire document
-    // This is much lighter than subtree + characterData
-    const target = document.querySelector('.ut-one-click-sbc-header-view')
-      || document.querySelector('[class*="sbc"]')
-      || document.body;
+    // Watch for SBC-related elements and any score-value elements that may exist
+    // This covers both builder and review screen structures more reliably
+    const target = document.querySelector('[class*="sbc"]') || document.body;
     obs.observe(target, { childList: true, subtree: true });
     observerInstalled = true;
   }
