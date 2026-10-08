@@ -66,6 +66,8 @@
 
   function doUpdate() {
     pendingUpdate = false;
+    
+    // Force refresh the score element lookup with each update
     const scoreEl = document.querySelector(SCORE_SELECTOR);
 
     // If no score element found at all, hide tracker
@@ -140,9 +142,8 @@
   function ensureObserver() {
     if (observerInstalled) return;
     const obs = new MutationObserver(scheduleUpdate);
-    // Watch for elements that contain score values, not just specific class names
-    const target = document.body; 
-    obs.observe(target, { childList: true, subtree: true });
+    // Watch the entire document body - most reliable for detecting SBC content
+    obs.observe(document.body, { childList: true, subtree: true });
     observerInstalled = true;
   }
 
@@ -150,8 +151,13 @@
   setTimeout(() => {
     doUpdate();
     ensureObserver();
-  }, 500);
+  }, 100);
 
+  // Additional updates to avoid race conditions
+  setTimeout(() => {
+    doUpdate();
+  }, 500);
+  
   // Light polling as fallback (every 6s)
   setInterval(doUpdate, 6000);
 })();
