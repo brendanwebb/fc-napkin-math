@@ -92,7 +92,7 @@
       fill.classList.toggle('over', overrun);
     }
     
-    // Update all values
+    // Update all values with proper classes
     const currentEl = tracker.querySelector('#gt-current');
     const requiredEl = tracker.querySelector('#gt-required');
     const remainingEl = tracker.querySelector('#gt-remaining');
@@ -108,11 +108,20 @@
       } else {
         if (filled) {
           remainingEl.textContent = 'Perfect';
+          // Add the fulfilled class to make it have the green border/highlight
+          tracker.classList.add('fulfilled');
+          tracker.classList.remove('over');
         } else {
           remainingEl.innerHTML = Math.abs(diff).toLocaleString() + ' <span class="gems-word">gems left</span>';
+          // Remove any highlight classes when not perfect
+          tracker.classList.remove('fulfilled', 'over');
         }
       }
     }
+    
+    // Update tracker classes for proper styling
+    tracker.classList.toggle('fulfilled', filled);
+    tracker.classList.toggle('over', overrun);
   }
 
   function scheduleUpdate() {
