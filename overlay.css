@@ -1,6 +1,6 @@
 /* Gems progress bar - inserted inline below the SBC header */
 #gems-tracker {
-  margin: 12px 0;
+  margin: 12px auto;
   background: rgba(10, 10, 15, 0.92);
   border: 2px solid #333;
   border-radius: 12px;
