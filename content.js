@@ -18,8 +18,24 @@
   function doUpdate() {
     pendingUpdate = false;
     
-    // Find score element
-    const scoreEl = document.querySelector(SCORE_SELECTOR);
+    // Find score element - try multiple selectors for both views
+    let scoreEl = document.querySelector(SCORE_SELECTOR);
+    
+    // If not found, search within review view specifically
+    if (!scoreEl) {
+      scoreEl = document.querySelector('.ut-one-click-sbc-review-view .ut-one-click-sbc-header-view--score-value');
+    }
+    
+    // If still not found, search more broadly
+    if (!scoreEl) {
+      const allScoreElements = document.querySelectorAll('.ut-one-click-sbc-header-view--score-value');
+      for (let el of allScoreElements) {
+        if (el.textContent.trim() && el.textContent.includes('/')) {
+          scoreEl = el;
+          break;
+        }
+      }
+    }
 
     // If no score element found at all, hide tracker
     if (!scoreEl) {
@@ -56,21 +72,25 @@
     
     // Insert the tracker right after the ".rewards-container" (Group Rewards section)
     const rewardsContainer = document.querySelector('.rewards-container');
-    if (rewardsContainer && tracker.parentNode !== rewardsContainer.parentNode) {
-      const next = rewardsContainer.nextSibling;
+    let insertTarget = rewardsContainer;
+    
+    // If no rewards container, find a fallback parent that exists in both views
+    if (!insertTarget) {
+      insertTarget = document.querySelector('.ut-one-click-sbc-work-area-view') || 
+                     document.querySelector('.ut-one-click-sbc-review-view') ||
+                     document.querySelector('.ut-content');
+    }
+    
+    if (insertTarget && tracker.parentNode !== insertTarget.parentNode) {
+      const next = insertTarget.nextSibling;
       if (next) {
-        rewardsContainer.parentNode.insertBefore(tracker, next);
+        insertTarget.parentNode.insertBefore(tracker, next);
       } else {
-        rewardsContainer.parentNode.appendChild(tracker);
+        insertTarget.parentNode.appendChild(tracker);
       }
     }
 
     const text = scoreEl.textContent.trim();
-    
-    // If the text hasn't changed, keep existing values
-    if (text === lastScoreText) {
-      return;
-    }
     
     lastScoreText = text;
 
@@ -92,13 +112,20 @@
       fill.classList.toggle('over', overrun);
     }
     
-    // Update all values with proper classes
     const currentEl = tracker.querySelector('#gt-current');
     const requiredEl = tracker.querySelector('#gt-required');
     const remainingEl = tracker.querySelector('#gt-remaining');
     
-    if (currentEl) currentEl.textContent = score.current.toLocaleString();
-    if (requiredEl) requiredEl.textContent = score.required.toLocaleString();
+    const newCurrent = score.current.toLocaleString();
+    const newRequired = score.required.toLocaleString();
+    
+    if (currentEl && currentEl.textContent === newCurrent && 
+        requiredEl && requiredEl.textContent === newRequired) {
+      return;
+    }
+    
+    if (currentEl) currentEl.textContent = newCurrent;
+    if (requiredEl) requiredEl.textContent = newRequired;
     
     if (remainingEl) {
       remainingEl.classList.remove('over');
@@ -108,18 +135,15 @@
       } else {
         if (filled) {
           remainingEl.textContent = 'Perfect';
-          // Add the fulfilled class to make it have the green border/highlight
           tracker.classList.add('fulfilled');
           tracker.classList.remove('over');
         } else {
           remainingEl.innerHTML = Math.abs(diff).toLocaleString() + ' <span class="gems-word">gems left</span>';
-          // Remove any highlight classes when not perfect
           tracker.classList.remove('fulfilled', 'over');
         }
       }
     }
     
-    // Update tracker classes for proper styling
     tracker.classList.toggle('fulfilled', filled);
     tracker.classList.toggle('over', overrun);
   }
