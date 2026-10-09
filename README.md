@@ -2,6 +2,8 @@
 
 Calculates remaining gems needed for Streamlined SBCs in EA Sports FC Ultimate Team.
 
+![FC Napkin Math Tracker](./screenshot.png)
+
 ## Installation
 
 1. Download or clone this repository
